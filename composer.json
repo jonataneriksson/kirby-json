@@ -1,0 +1,19 @@
+{
+    "name": "jonataneriksson/kirby-cms-json-api",
+    "description": "Kirby CMS content as JSON API object.",
+    "version" : "0.2.0",
+    "type": "kirby-plugin",
+    "homepage": "https://tsto.org",
+    "authors": [
+        {
+            "name": "Jonatan Eriksson",
+            "email": "jonatan@tsto.org",
+            "homepage": "https://tsto.org"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "getkirby/cms": "^3.0",
+        "php": ">=7.1.0"
+    }
+}

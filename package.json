@@ -1,0 +1,8 @@
+{
+  "name": "api",
+  "description": "Kirby CMS content as JSON API object.",
+  "author": "Jonatan Eriksson <jonatan.eriksson@gmail.com>",
+  "version" : "0.1.7",
+  "license": "MIT",
+  "type": "kirby-plugin"
+}
