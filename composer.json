@@ -13,6 +13,7 @@
     ],
     "require": {
         "getkirby/cms": "^3.0",
+        "getkirby/composer-installer": "^1.1",
         "php": ">=7.1.0"
     }
 }
