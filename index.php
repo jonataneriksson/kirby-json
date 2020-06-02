@@ -1,7 +1,9 @@
 <?php
 
 Kirby::plugin('jonataneriksson/json', [
-  'options' => ['cache' => true],
+  'options' => [
+    'cache' => true
+  ],
   'hooks' => [
     'site.update:after' => function () {
         kirby()->cache('jonataneriksson.json')->flush();
@@ -301,7 +303,7 @@ Kirby::plugin('jonataneriksson/json', [
                 $fileitem['width'] = (string)$stillfromvideo->width();
                 $fileitem['ratio'] = (string)round($stillfromvideo->ratio()*100)/100;
                 $fileitem['orientation'] = (string)$stillfromvideo->orientation();
-                $fileitem['thumbnails'] = getthumbnails($file, ['clip' => true, 'still' => true]);
+                //$fileitem['thumbnails'] = getthumbnails($file, ['clip' => true, 'still' => true]);
               endif;
 
               foreach($file->content(get('language'))->data() as $key => $value):
@@ -329,7 +331,6 @@ Kirby::plugin('jonataneriksson/json', [
               $placeholder = $placeholderfile->base64();
               $thumbnails['placeholder'] = $placeholder;
               $filename = $file->name();
-              $base64lenght = strlen ($placeholder);
               return $thumbnails;
             }
 
