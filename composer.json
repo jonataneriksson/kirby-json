@@ -1,7 +1,7 @@
 {
     "name": "jonataneriksson/kirby-json",
     "description": "Kirby CMS content as JSON API object.",
-    "version" : "1.0.0",
+    "version" : "1.1.0",
     "type": "kirby-plugin",
     "homepage": "https://tsto.org",
     "authors": [
