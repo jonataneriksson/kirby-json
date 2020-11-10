@@ -47,7 +47,6 @@ Kirby::plugin('jonataneriksson/json', [
 
             //Some GET variables are needed
             $timer = get('debug') ? microtime(true) : false;
-            $GLOBALS['debug'] = (array)[];
             $language = get('language');
 
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -87,29 +86,64 @@ Kirby::plugin('jonataneriksson/json', [
                 }
             }
 
-            //Field can be yaml
-            function canbeyaml($field)
-            {
-              try {
-                  return $field->yaml();
-              } catch (Exception $exception) {
-                  return false;
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            /* !Get field */
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+            function getfield($field) {
+              if (fieldisyaml($field)) {
+                $current_field = getstructure($field); //$field->toStructure();
+              } else {
+                $current_field['value'] = $field->value;
+                $current_field['kirbytext'] = kirbytext($field->value);
               }
+              return $current_field;
             }
 
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
             /* !Get field */
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-            function getfield($field) {
-              $current_field = [];
-              if (fieldisyaml($field)) {
-                $current_field = getstructure($field);
-              } else {
-                $current_field['value'] = $field;
-                $current_field['kirbytext'] = kirbytext($field);
+            function checkkey($key) {
+              if (substr($key, 0, 1) === '_') {
+                return false;
               }
-              return $current_field;
+              if ($key === 'id') {
+                return false;
+              }
+              return true;
+            }
+
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            /* !Get Array */
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+            function getarray($input) {
+              $return = [];
+              foreach($input as $key => $value):
+                if ( gettype($value) == 'string' && checkkey($key) ) {
+                  $return[$key]['value'] = $value;
+                  $return[$key]['kirbytext'] = kirbytext($value);
+                } elseif ( gettype($value) == 'array' && checkkey($key)  ) {
+                  $return[$key] = getarray($value);
+                } else {
+                  //Heres id & _key & _uid
+                  $return[$key] = $value;
+                }
+              endforeach;
+              return $return;
+            }
+
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            /* !Get structure */
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+            function getstructure($input) {
+              $return = [];
+              foreach($input->toStructure() as $index => $structure):
+                $return[] = getarray($structure->toArray());
+              endforeach;
+              return $return;
             }
 
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -119,7 +153,7 @@ Kirby::plugin('jonataneriksson/json', [
             function getfields($page) {
               $contentitem = [];
               foreach($page->content(get('language'))->data() as $key => $field):
-                $contentitem[$key] = getfield($field);
+                $contentitem[$key] = getfield( $page->content()->get($key) );
               endforeach;
               return $contentitem;
             }
@@ -338,25 +372,30 @@ Kirby::plugin('jonataneriksson/json', [
             /* !The Return */
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-            $json->debug = false;
-
+            //Site
             $json->site = kirby()->site()->content(get('language'))->toArray();
 
+            //Page
             if(get('path')):
               if($page = kirby()->site()->pages()->findByURI(get('path'))):
                 $json->page = getpage($page);
               endif;
             endif;
 
+            //Pages
             $json->pages = getpages(kirby()->site()->pages());
-            if(get('debug')) $json->debug = $GLOBALS['debug'];;
-            //Timer for debugging.
+
+            //Timer
             if($timer) $json->loadtime = microtime(true) - $timer;
 
+            //For debug
+            //return json_encode($json);
+
+            //Retrun from cache
             $apiCache->set($cacheName, json_encode($json), 30);
           }
 
-          return $apiCache->get($cacheName);
+          return Response::json($apiCache->get($cacheName));
         }
       ]
     ];
