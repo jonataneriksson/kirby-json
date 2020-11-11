@@ -37,7 +37,7 @@ Kirby::plugin('jonataneriksson/json', [
         'action'  => function () {
 
           $apiCache = kirby()->cache('jonataneriksson.json');
-          $cacheName = get('path');
+          $cacheName = get('language') . "/" . get('path');
           $apiData = $apiCache->get($cacheName);
 
           if ($apiData === null || get('debug') ) {
@@ -372,6 +372,9 @@ Kirby::plugin('jonataneriksson/json', [
             /* !The Return */
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+            //Language
+            $json->language = get('language');
+
             //Site
             $json->site = kirby()->site()->content(get('language'))->toArray();
 
@@ -395,7 +398,9 @@ Kirby::plugin('jonataneriksson/json', [
             $apiCache->set($cacheName, json_encode($json), 30);
           }
 
-          return Response::json($apiCache->get($cacheName));
+          return json_encode($json);
+
+          //return Response::json($apiCache->get($cacheName));
         }
       ]
     ];
