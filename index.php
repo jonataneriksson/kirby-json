@@ -398,9 +398,7 @@ Kirby::plugin('jonataneriksson/json', [
             $apiCache->set($cacheName, json_encode($json), 30);
           }
 
-          return json_encode($json);
-
-          //return Response::json($apiCache->get($cacheName));
+          return Response::json($apiCache->get($cacheName));
         }
       ]
     ];
