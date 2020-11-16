@@ -39,6 +39,7 @@ Kirby::plugin('jonataneriksson/json', [
           $apiCache = kirby()->cache('jonataneriksson.json');
           $cacheName = get('language') . "/" . get('path');
           $apiData = $apiCache->get($cacheName);
+          //$apiData = null;
 
           if ($apiData === null || get('debug') ) {
 
@@ -166,17 +167,13 @@ Kirby::plugin('jonataneriksson/json', [
 
               //Let's make the return array
               $pageitems = (array)[];
-
               $index = 0;
 
               //Loop through pages
               foreach($pages as $page):
-
                 //Save page data to array
                 $pageitems[$page->uid()] = getpagestructure($page, $index);
-
                 $index++;
-
               endforeach;
 
               //Return pages array
@@ -224,6 +221,46 @@ Kirby::plugin('jonataneriksson/json', [
             }
 
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            /* !Should parent be extended?*/
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+            function loadparent($page) {
+              if ($page->children()) {
+                foreach($page->children() as $child):
+                  if( get('path') == (string)$child->uri() ):
+                    return true;
+                  endif;
+                endforeach;
+              }
+              return false;
+            }
+
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            /* !Should children be extended?*/
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+            function loadchildren($page) {
+              if ($page->parent()) {
+                if( get('path') == $page->parent()->uri() ):
+                  return true;
+                endif;
+              }
+              return false;
+            }
+
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            /* !Should page be extended?*/
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+            function shouldbeextended($page) {
+              if(get('path')==(string)$page->uri() || get('full') || loadparent($page) || loadchildren($page)):
+                return true;
+              else:
+                return false;
+              endif;
+            }
+
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
             /* !Get page */
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -244,10 +281,8 @@ Kirby::plugin('jonataneriksson/json', [
               endif;
 
               //Extend page item
-              if(get('path')==(string)$page->uri() || get('full')):
+              if(shouldbeextended($page)):
                   $pageitem = extendpage($page, $pageitem);
-              elseif('portfolio'==(string)$page->uri()):
-                      $pageitem = extendpage($page, $pageitem);
               else:
                   $pageitem->extended = false;
               endif;
@@ -268,6 +303,7 @@ Kirby::plugin('jonataneriksson/json', [
               $pageitem->url = (string)$page->url();
               $pageitem->uid = (string)$page->uid();
               $pageitem->visible = (string)$page->isListed();
+              $pageitem->index = $index;
 
               //Get strings only.
               if(get('language')) $pageitem->language = get('language');
@@ -279,14 +315,11 @@ Kirby::plugin('jonataneriksson/json', [
               endif;
 
               //Extend page item
-              //if(get('path')==(string)$page->uri() || get('full')):
+              if(shouldbeextended($page)):
                   $pageitem = extendpage($page, $pageitem);
-
-                  //Add some meta
-                  $pageitem->index = $index;
-              //else:
-              //    $pageitem->extended = false;
-              //endif;
+              else:
+                  $pageitem->extended = false;
+              endif;
 
               //Return page array
               return $pageitem;
@@ -337,7 +370,6 @@ Kirby::plugin('jonataneriksson/json', [
                 $fileitem['width'] = (string)$stillfromvideo->width();
                 $fileitem['ratio'] = (string)round($stillfromvideo->ratio()*100)/100;
                 $fileitem['orientation'] = (string)$stillfromvideo->orientation();
-                //$fileitem['thumbnails'] = getthumbnails($file, ['clip' => true, 'still' => true]);
               endif;
 
               foreach($file->content(get('language'))->data() as $key => $value):
@@ -392,7 +424,7 @@ Kirby::plugin('jonataneriksson/json', [
             if($timer) $json->loadtime = microtime(true) - $timer;
 
             //For debug
-            //return json_encode($json);
+            //return Response::json(json_encode($json));
 
             //Retrun from cache
             $apiCache->set($cacheName, json_encode($json), 30);
