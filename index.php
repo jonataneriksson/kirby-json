@@ -175,6 +175,52 @@ Kirby::plugin('jonataneriksson/json', [
             }
 
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            /* !Get field */
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+            function checkkey($key) {
+              if (substr($key, 0, 1) === '_') {
+                return false;
+              }
+              if ($key === 'id') {
+                return false;
+              }
+              return true;
+            }
+
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            /* !Get Array */
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+            function getarray($input) {
+              $return = [];
+              foreach($input as $key => $value):
+                if ( gettype($value) == 'string' && checkkey($key) ) {
+                  $return[$key]['value'] = $value;
+                  $return[$key]['kirbytext'] = kirbytext($value);
+                } elseif ( gettype($value) == 'array' && checkkey($key)  ) {
+                  $return[$key] = getarray($value);
+                } else {
+                  //Heres id & _key & _uid
+                  $return[$key] = $value;
+                }
+              endforeach;
+              return $return;
+            }
+
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            /* !Get structure */
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+            function getstructure($input) {
+              $return = [];
+              foreach($input->toStructure() as $index => $structure):
+                $return[] = getarray($structure->toArray());
+              endforeach;
+              return $return;
+            }
+
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
             /* !Get fields */
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
