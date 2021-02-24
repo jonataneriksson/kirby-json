@@ -175,52 +175,6 @@ Kirby::plugin('jonataneriksson/json', [
             }
 
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-            /* !Get field */
-            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-            function checkkey($key) {
-              if (substr($key, 0, 1) === '_') {
-                return false;
-              }
-              if ($key === 'id') {
-                return false;
-              }
-              return true;
-            }
-
-            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-            /* !Get Array */
-            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-            function getarray($input) {
-              $return = [];
-              foreach($input as $key => $value):
-                if ( gettype($value) == 'string' && checkkey($key) ) {
-                  $return[$key]['value'] = $value;
-                  $return[$key]['kirbytext'] = kirbytext($value);
-                } elseif ( gettype($value) == 'array' && checkkey($key)  ) {
-                  $return[$key] = getarray($value);
-                } else {
-                  //Heres id & _key & _uid
-                  $return[$key] = $value;
-                }
-              endforeach;
-              return $return;
-            }
-
-            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-            /* !Get structure */
-            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-            function getstructure($input) {
-              $return = [];
-              foreach($input->toStructure() as $index => $structure):
-                $return[] = getarray($structure->toArray());
-              endforeach;
-              return $return;
-            }
-
-            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
             /* !Get fields */
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -292,8 +246,35 @@ Kirby::plugin('jonataneriksson/json', [
               $pageitem->children = getpagestructures($page->children());
               $pageitem->extended = true;
               $pageitem->index = (int) $page->num();
-              $pageitem->next = ($page->hasNext()) ? $page->next()->url() : false;
+              $pageitem->next = nextOrFirstListedSibling($page);
+              $pageitem->prev = prevOrLastListedSibling($page);
               return $pageitem;
+            }
+
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            /* !Next and Prev?*/
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+            function nextOrFirstListedSibling($page) {
+              $collection = $page->siblings()->listed();
+              if ($page->nextListed($collection)) {
+                return $page->nextListed($collection)->uid();
+              } elseif($collection->first()) {
+                return $collection->first()->uid();
+              } else {
+                return false;
+              }
+            }
+
+            function prevOrLastListedSibling($page) {
+              $collection = $page->siblings()->listed();
+              if ($page->prevListed($collection) ) {
+                return $page->prevListed($collection)->uid();
+              } elseif($collection->last()) {
+                return $collection->last()->uid();
+              } else {
+                return false;
+              }
             }
 
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
