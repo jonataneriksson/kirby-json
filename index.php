@@ -258,9 +258,9 @@ Kirby::plugin('jonataneriksson/json', [
             function nextOrFirstListedSibling($page) {
               $collection = $page->siblings()->listed();
               if ($page->nextListed($collection)) {
-                return $page->nextListed($collection)->uid();
+                return $page->nextListed($collection)->uri();
               } elseif($collection->first()) {
-                return $collection->first()->uid();
+                return $collection->first()->uri();
               } else {
                 return false;
               }
@@ -269,9 +269,9 @@ Kirby::plugin('jonataneriksson/json', [
             function prevOrLastListedSibling($page) {
               $collection = $page->siblings()->listed();
               if ($page->prevListed($collection) ) {
-                return $page->prevListed($collection)->uid();
+                return $page->prevListed($collection)->uri();
               } elseif($collection->last()) {
-                return $collection->last()->uid();
+                return $collection->last()->uri();
               } else {
                 return false;
               }
