@@ -37,14 +37,19 @@ Kirby::plugin('jonataneriksson/json', [
         'action'  => function () {
 
           $apiCache = kirby()->cache('jonataneriksson.json');
-          $cacheName = get('language') . "/" . get('path');
+          $cacheName = get('structure') ? 'structured' : '';
+          $cacheName = get('language') ? $cacheName . get('language') : $cacheName;
+          $cacheName = $cacheName . "/" . get('path');
           $apiData = $apiCache->get($cacheName);
-          //$apiData = null;
+          //$apiData = null; //By pass cache for debugging.
 
           if ($apiData === null || get('debug') ) {
 
             //Setup the return object
             $json = (object)[];
+
+            //Language
+            $json->language = get('language');
 
             //Some GET variables are needed
             $timer = microtime(true);
@@ -243,7 +248,7 @@ Kirby::plugin('jonataneriksson/json', [
               $pageitem->strings = (array)$page->content(get('language'))->toArray();
               $pageitem->template = (string)$page->intendedTemplate();
               $pageitem->folder = (string)$page->contentURL();
-              $pageitem->children = getpagestructures($page->children());
+              //$pageitem->children = getpagestructures($page->children());
               $pageitem->extended = true;
               $pageitem->index = (int) $page->num();
               $pageitem->next = nextOrFirstListedSibling($page);
@@ -346,7 +351,7 @@ Kirby::plugin('jonataneriksson/json', [
               $pageitem->strings = (array)$page->content(get('language'))->toArray();
 
               //Setup children
-              if($page->hasChildren()):
+              if($page->hasChildren() && get('structure') == '1'):
                 $pageitem->children = getpagestructures($page->children());
               else:
                 $pageitem->children = false;
@@ -383,7 +388,7 @@ Kirby::plugin('jonataneriksson/json', [
               $pageitem->strings = (array)$page->content(get('language'))->toArray();
 
               //Setup children
-              if( ($page->hasChildren() && get('structure')==1) || (get('full')==1) ):
+              if( ($page->hasChildren() && get('structure') == '1') || (get('full')==1) ):
                 $pageitem->children = getpages($page->children());
               else:
                 $pageitem->children = false;
@@ -479,11 +484,10 @@ Kirby::plugin('jonataneriksson/json', [
             /* !The Return */
             /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-            //Language
-            $json->language = get('language');
-
             //Site
-            $json->site = kirby()->site()->content(get('language'))->toArray();
+            if(get('structure') == '1'):
+              $json->site = kirby()->site()->content(get('language'))->toArray();
+            endif;
 
             //Page
             if(get('path')):
@@ -493,13 +497,16 @@ Kirby::plugin('jonataneriksson/json', [
             endif;
 
             //Pages
-            $json->pages = getpages(kirby()->site()->pages());
+            if(get('structure') == '1'):
+              $json->pages = getpages(kirby()->site()->pages());
+            endif;
 
             //Timer
             $json->loadtime = microtime(true) - $timer;
+            $json->cacheName = $cacheName;
 
             //Retrun from cache
-            $apiCache->set($cacheName, json_encode($json), 30);
+            $apiCache->set($cacheName, json_encode($json), 525600);
           }
 
           return Response::json($apiCache->get($cacheName));
